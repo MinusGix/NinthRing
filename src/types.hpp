@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <variant>
 
+// Same bytecode
 enum class Register {
     Alpha=0,
     Beta=1
@@ -30,5 +31,10 @@ struct ResetR {
 
 
 using Instruction = std::variant<NandRR, NandRI, ResetR>;
+enum class InstructionCode {
+    NandRI = 0x05,
+    NandRR = 0x06,
+    ResetR = 0x07
+};
 
 #endif

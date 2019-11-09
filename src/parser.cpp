@@ -190,17 +190,17 @@ class Parser {
             // 5 is arbitrary starting point for instructions, so we can put some before or something idk
             if (std::holds_alternative<NandRI>(ins)) {
                 NandRI n = std::get<NandRI>(ins);
-                values.push_back(0x05); // Nand reg immediate
+                values.push_back(static_cast<uint8_t>(InstructionCode::NandRI)); // Nand reg immediate
                 values.push_back(bytecodeRegister(n.to));
                 bytecodeImmediate(values, n.num);
             } else if (std::holds_alternative<NandRR>(ins)) {
                 NandRR n = std::get<NandRR>(ins);
-                values.push_back(0x06); // nand reg reg
+                values.push_back(static_cast<uint8_t>(InstructionCode::NandRR)); // nand reg reg
                 values.push_back(bytecodeRegister(n.to));
                 values.push_back(bytecodeRegister(n.from));
             } else if (std::holds_alternative<ResetR>(ins)) {
                 ResetR r = std::get<ResetR>(ins);
-                values.push_back(0x07); // reset reg
+                values.push_back(static_cast<uint8_t>(InstructionCode::ResetR)); // reset reg
                 values.push_back(bytecodeRegister(r.victim));
             } else {
                 throw std::runtime_error("Can not generate bytecode for unknown instruction!");

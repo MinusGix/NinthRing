@@ -287,14 +287,7 @@ class Parser {
     }
 
     uint8_t bytecodeRegister (Register r) {
-        // 3 is arbitrary start
-        if (r == Register::Alpha) {
-            return 3;
-        } else if (r == Register::Beta) {
-            return 4;
-        } else {
-            return 0; // invalid register, THis should throw an error, or perhaps we could have a null-register?
-        }
+        return static_cast<uint8_t>(r);
     }
 
     void bytecodeImmediate (std::vector<uint8_t>& values, Immediate value) {

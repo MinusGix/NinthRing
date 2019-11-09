@@ -10,8 +10,8 @@ const static size_t InstructionSize = 1;
 
 // Same bytecode
 enum class Register {
-    Alpha=0,
-    Beta=1
+    Alpha=3,
+    Beta=4
 };
 using Immediate = uint32_t;
 

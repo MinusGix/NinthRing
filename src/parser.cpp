@@ -12,16 +12,22 @@ class Parser {
 
     Parser (std::string t_code) : code(t_code) {}
 
+    bool isValidIndex (size_t i) {
+        return i < code.size();
+    }
+
     void parse () {
-        for (size_t i = 0; i < code.size(); i++) {
+        for (size_t i = 0; isValidIndex(i);) {
             consumeWhitespace(i);
 
             // Comment, consume until end of line
             if (code[i] == ';') {
-                for (; i < code.size(); i++) {
+                for (; isValidIndex(i);) {
                     if (code[i] == '\n') {
+                        i++;
                         break;
                     }
+                    i++;
                 }
 
                 continue;
@@ -34,7 +40,7 @@ class Parser {
             size_t instruction_name_size = 0;
             const size_t instruction_name_index = i;
 
-            for (; i < code.size() && isTextCharacter(code[i]); i++) {
+            for (; isValidIndex(i) && isTextCharacter(code[i]); i++) {
                 instruction_name_size++;
             }
 
@@ -67,6 +73,20 @@ class Parser {
             } else {
                 throw std::runtime_error("Unknown instruction name: '" + instruction_name + "'");
             }
+
+            if (!isValidIndex(i)) {
+                break;
+            }
+
+            // I HATE NEWLINES
+            if (code[i] == '\n' || code[i] == '\r') {
+                i++;
+                if (isValidIndex(i)) {
+                    if (code[i] == '\n' || code[i] == '\r') {
+                        i++;
+                    }
+                }
+            }
         }
     }
 
@@ -75,7 +95,7 @@ class Parser {
 
         consumeWhitespace(i);
 
-        if (i >= code.size()) {
+        if (!isValidIndex(i)) {
             std::cout << "Number parsing went past end, stopping..\n";
             i = initial_i;
             return false;
@@ -90,7 +110,7 @@ class Parser {
         size_t number_size = 0;
         const size_t number_index = i;
 
-        for (; i < code.size() && isdigit(code[i]); i++) {
+        for (; isValidIndex(i) && isdigit(code[i]); i++) {
             number_size++;
         }
 
@@ -109,7 +129,7 @@ class Parser {
         // Consume whitespace
         consumeWhitespace(i);
 
-        if (i >= code.size()) {
+        if (!isValidIndex(i)) {
             i = initial_i;
             return false;
         }
@@ -124,7 +144,7 @@ class Parser {
         size_t register_size = 0;
         const size_t register_index = i;
 
-        if (i >= code.size()) {
+        if (!isValidIndex(i)) {
             i = initial_i;
             return false;
         }
@@ -133,7 +153,7 @@ class Parser {
             return false;
         }
 
-        for (; i < code.size() && isTextCharacter(code[i]); i++) {
+        for (; isValidIndex(i) && isTextCharacter(code[i]); i++) {
             register_size++;
         }
 
@@ -152,7 +172,7 @@ class Parser {
     }
 
     void consumeWhitespace (size_t& i) {
-        for (; i < code.size() && isWhitespace(code[i]); i++) {}
+        for (; isValidIndex(i) && isWhitespace(code[i]); i++) {}
     }
 
     bool isTextCharacter (char c) {
@@ -248,7 +268,8 @@ class Parser {
 int main () {
     Parser p = Parser(
         "nand %alpha 45\n"
-        "reset %beta"
+        "reset %beta; abc\n"
+        " ;  test;a"
     );
     p.parse();
     p.debug();

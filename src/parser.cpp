@@ -3,6 +3,15 @@
 #include <vector>
 #include "types.hpp"
 
+bool isHexadecimalDigit (char c) {
+    return isdigit(c) || c == 'a' || c == 'A' || c == 'b' || c == 'B' || c == 'c' || c == 'C' ||
+        c == 'd' || c == 'D' || c == 'e' || c == 'E' || c == 'f' || c == 'F';
+}
+
+bool isBinaryDigit (char c) {
+    return c == '0' || c == '1';
+}
+
 class Parser {
     public:
 
@@ -96,13 +105,33 @@ class Parser {
         consumeWhitespace(i);
 
         if (!isValidIndex(i)) {
-            std::cout << "Number parsing went past end, stopping..\n";
             i = initial_i;
             return false;
         }
 
+        if (code[i] == '0' && isValidIndex(i + 1)) {
+            if (code[i + 1] == 'x') {
+                i += 2; // skip 0x
+                if (!parseHexadecimal(i, num)) {
+                    i = initial_i;
+                    return false;
+                } else {
+                    return true;
+                }
+            } else if (code[i + 1] == 'b') {
+                i += 2; // skip 0b
+                if (!parseBinary(i, num)) {
+                    i = initial_i;
+                    return false;
+                } else {
+                    return true;
+                }
+            } else if (!isdigit(code[i] + 1)) { // if it's a digit, lets just ignore it and do normal number parsing
+                throw std::runtime_error("Unknown modifier to number at position " + std::to_string(i + 1));
+            }
+        }
+
         if (!isdigit(code[i])) {
-            std::cout << "Number parsing found character that wasn't digit at start.. " + std::to_string(code[i]) + "\n";
             i = initial_i;
             return false;
         }
@@ -115,7 +144,52 @@ class Parser {
         }
 
         std::string number_text = code.substr(number_index, number_size);
-        Immediate result = std::stoi(number_text);
+
+        // TODO: Hopefully this cast is fine..
+        Immediate result = static_cast<Immediate>(std::stoul(number_text));
+
+        num = result;
+
+        return true;
+    }
+    // It'd be nice to not have repeats
+
+    bool parseHexadecimal (size_t& i, Immediate& num) {
+        if (!isHexadecimalDigit(code[i])) {
+            return false;
+        }
+
+        size_t number_size = 0;
+        const size_t number_index = i;
+
+        for (; isValidIndex(i) && isHexadecimalDigit(code[i]); i++) {
+            number_size++;
+        }
+
+        std::string number_text = code.substr(number_index, number_size);
+        // TODO: Hopefully this cast is fine..
+        Immediate result = static_cast<Immediate>(std::stoul(number_text, nullptr, 16));
+
+        num = result;
+
+        return true;
+    }
+
+    bool parseBinary (size_t& i, Immediate& num) {
+        if (!isBinaryDigit(code[i])) {
+            return false;
+        }
+
+        size_t number_size = 0;
+        const size_t number_index = i;
+
+        for (; isValidIndex(i) && isBinaryDigit(code[i]); i++) {
+            number_size++;
+        }
+
+        std::string number_text = code.substr(number_index, number_size);
+        // TODO: Hopefully this cast is fine..
+        Immediate result = static_cast<Immediate>(std::stoul(number_text, nullptr, 2));
 
         num = result;
 
@@ -267,7 +341,7 @@ class Parser {
 
 int main () {
     Parser p = Parser(
-        "nand %alpha 45\n"
+        "nand %alpha 0x2d\n"
         "reset %beta; abc\n"
         " ;  test;a"
     );

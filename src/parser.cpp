@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <fstream>
 #include "types.hpp"
 
 bool isHexadecimalDigit (char c) {
@@ -339,12 +341,34 @@ class Parser {
     }
 };
 
-int main () {
-    Parser p = Parser(
-        "nand %alpha 0x2d\n"
-        "reset %beta; abc\n"
-        " ;  test;a"
+int main (int argc, char** argv) {
+    if (argc == 1) {
+        std::cout << "Parser/Bytecodifier\nparser [input-file] [output-file]\nEx: parser examples/basic.nr build/basic.nv\n";
+        return 0;
+    } else if (argc == 2) {
+        std::cout << "Requires output file\n";
+        return 1;
+    }
+
+    std::string input_filename = argv[1];
+    std::string output_filename = argv[2];
+
+    if (!std::filesystem::exists(input_filename)) {
+        std::cout << "Cannot find file: " << input_filename << "\n";
+        return 1;
+    }
+
+    std::ifstream input_file(input_filename);
+
+    // Read entire file
+    std::string input_text(
+        (std::istreambuf_iterator<char>(input_file)),
+        (std::istreambuf_iterator<char>())
     );
+
+    input_file.close();
+
+    Parser p = Parser(input_text);
     p.parse();
     p.debug();
     std::cout << "Bytecode: \n";
@@ -354,4 +378,7 @@ int main () {
     for (uint8_t v : x) {
         std::cout << unsigned(v) << " ";
     }
+
+    std::ofstream output_file(output_filename, std::ios::out | std::ios::binary);
+    output_file.write(reinterpret_cast<char*>(x.data()), x.size());
 }
